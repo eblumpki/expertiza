@@ -10,6 +10,16 @@ class ResponseController < ApplicationController
     @map = @response.map
     get_content
   end
+
+  def update_cycle
+    @response = Response.find(params[:id])
+    if @response.cycle==0 then
+      response.cycle = 1
+      else @response.cycle = 0
+      end
+    @response.save
+    redirect_to :controller => 'grades', :action => 'view', :id => params[:assignment_id]
+  end
   
   def delete
     @response = Response.find(params[:id])

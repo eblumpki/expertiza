@@ -1,4 +1,6 @@
+require "lib/hamer.rb"
 class GradesController < ApplicationController
+  include Hamer
   helper :file
   helper :submitted_content
 
@@ -15,11 +17,24 @@ class GradesController < ApplicationController
       @questions[questionnaire.symbol] = questionnaire.questions
     }
     @scores = @assignment.get_scores(@questions)
+    @due_dates= DueDate.find(:all, :conditions => ["assignment_id = ? and deadline_type_id = ? ", @assignment.id,2])
+    if (Time.new.to_datetime > @due_dates[0].due_at.to_datetime)
+      #call only after review deadline
+
+      reviewers = get_reviewer_objects(@assignment.users)
+      submissions = get_submissions_objects(@assignment.participants)
+
+      @weighted_submissions = Hamer.calculate_weighted_scores_and_reputation(submissions, reviewers)[:submissions]
+      @post_review_deadline=true
+    else
+      @post_review_deadline=false
+    end
   end
 
   def view_my_scores
     @participant = AssignmentParticipant.find(params[:id])
     return if redirect_when_disallowed
+    @due_dates= DueDate.find(:all, :conditions => ["assignment_id = ? and deadline_type_id = ? ", @assignment.id,2])
     @assignment = @participant.assignment
     @questions = Hash.new
     questionnaires = @assignment.questionnaires
@@ -47,6 +62,18 @@ class GradesController < ApplicationController
           mmap.save
         end
       end
+    end
+
+    if (Time.new.to_datetime > @due_dates[0].due_at.to_datetime)
+      #call only after review deadline
+
+      reviewers = get_reviewer_objects(@assignment.users)
+      submissions = get_submission_objects(@assignment.participants)
+
+      @weighted_submission = Hamer.calculate_weighted_scores_and_reputation_for_a_submission(submissions, reviewers, @participant)
+      @post_review_deadline=true
+    else
+      @post_review_deadline=false
     end
   end
     

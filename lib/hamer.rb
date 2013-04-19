@@ -46,6 +46,12 @@ module Hamer
     return :iterations => iterations
   end
 
+  def self.calculate_weighted_scores_and_reputation_for_a_submission(submissions, reviewers, submission)
+    weighted_scores = calculate_weighted_scores_and_reputation(submissions, reviewers)
+    weighted_submissions = weighted_scores[:submissions]
+    return weighted_submissions[submission.id]
+  end
+
   # Ensure all numbers in lists a and b are equal
   # Options: :precision => Number of digits to round to
   def self.converged?(a, b, options={:precision => 2})
@@ -120,7 +126,7 @@ module Hamer
         @reviewers << Reviewer.new(letter)
       end
 
-      return @reviwers
+      return @reviewers
     end
 
     def submissions(rogue_score=5)
